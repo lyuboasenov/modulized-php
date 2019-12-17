@@ -1,79 +1,68 @@
 <?php
-require_once ('module.php');
+require_once ('iModule.php');
+require_once ('iShortCodeHandler.php');
 require_once ('request.php');
+require_once ('shortCode.php');
 
 interface iCore {
-   public function writeResponse($str);
+   public function write($str);
    public function get_username();
    public function get_userid();
+   public function getService($type);
 }
 
 
-class Core implements iCore {
+class Core implements iCore, iShortCodeHandler {
    private $request;
    private $modules;
+   private $shortCodeHandlers;
+   private $staticResources;
+   private $layout;
+   private $outputStream;
 
-   function load() {
-      // Initialize core
-      $this->request = new Request($_SERVER['REQUEST_URI']);
+   public function handleRequest($layout) {
+      $this->load();
+      $this->layout = $layout;
 
-      // Load modules
-      $this->loadModules();
-   }
-
-   function handleRequest() {
       // Poll for handlers
-      $requestHandlers = array();
+      $this->requestHandlers = array();
       foreach($this->modules as $module) {
          if ($module->canHandle()) {
-            $requestHandlers[] = $module;
+            $this->requestHandlers[] = $module;
          }
       }
 
-      $staticResources = array();
+      $this->staticResources = array();
       // Get static resources
-      foreach($requestHandlers as $module) {
-         $staticResources[] = array($module->getId(), $module->getStaticResources());
+      foreach($this->requestHandlers as $module) {
+         $this->staticResources[] = array($module->getId(), $module->getStaticResources());
       }
 
-      // Core handle
-      $this->writeResponse('<html><title>Modulized php project</title>');
-
-      // Include static resources
-      foreach($staticResources as $moduleResource) {
-         foreach($moduleResource[1] as $resource) {
-            $this->writeResponse('<link rel="stylesheet" type="text/css" href="static/' . $moduleResource[0] . '/' . $resource . '">');
-         }
+      $this->outputStream = fopen("php://output", 'w');
+      try {
+         // Core handle
+         $this->write($this->getIncludeContents($layout));
+      } finally {
+         fclose($this->outputStream);
       }
-
-      $this->writeResponse('<body>');
-      $this->writeResponse('<p><b>Uri: </b>');
-      $this->writeResponse($this->request->uri);
-      $this->writeResponse('</p>');
-
-      $this->writeResponse('<p><b>Available modules: </b></br><ul>');
-      foreach($this->modules as $module) {
-         $this->writeResponse('<li>' . $module->getName() . '</li>');
-      }
-      $this->writeResponse('</ul></p>');
-
-      // module handlers request
-      $this->writeResponse('<p><b>Request handlers: </b></br><ul>');
-      foreach($requestHandlers as $module) {
-         $this->writeResponse('<li>' . $module->getName() . '</li>');
-      }
-      $this->writeResponse('</ul></p>');
-      foreach($requestHandlers as $module) {
-         $module->handleRequest();
-      }
-
-      // End core handle
-      $this->writeResponse('<p><b>Bye!</b></p>');
-      $this->writeResponse('</body></html>');
    }
 
-   public function writeResponse($str) {
-      echo $str, PHP_EOL;
+   public function write($content) {
+      $parts = preg_split(ShortCode::$SHORT_CODE_PATTERN, $content, -1, PREG_SPLIT_NO_EMPTY | PREG_SPLIT_DELIM_CAPTURE);
+
+      foreach($parts as $part){
+         if (preg_match(ShortCode::$SHORT_CODE_PATTERN, $part)) {
+            $shortCode = new ShortCode($part);
+
+            foreach($this->shortCodeHandlers as $handler) {
+               if ($handler->canHandleShortCode($shortCode)) {
+                  $handler->handleShortCode($shortCode);
+               }
+            }
+         } else {
+            $this->writeToOutput($part);
+         }
+      }
    }
 
    public function get_username() {
@@ -82,6 +71,79 @@ class Core implements iCore {
 
    public function get_userid() {
       return 1;
+   }
+
+   public function getService($type) {
+      return new $type;
+   }
+
+   public function canHandleShortCode($shortCode) {
+      return $shortCode->getId() == 'core:staticResources' ||
+         $shortCode->getId() == 'core:content';
+   }
+
+   public function handleShortCode($shortCode) {
+      if ($this->canHandleShortCode($shortCode)) {
+         if ($shortCode->getId() == 'core:staticResources') {
+            $this->handleStaticResources();
+         } else if ($shortCode->getId() == 'core:content') {
+            $this->handleContent();
+         }
+      } else {
+         throw new Exception('Short code not supported.');
+      }
+   }
+
+   private function load() {
+      // Initialize core
+      $this->request = new Request($_SERVER['REQUEST_URI']);
+
+      // Load modules
+      $this->loadModules();
+   }
+
+   private function getIncludeContents($filename) {
+      if (is_file($filename)) {
+          ob_start();
+          include $filename;
+          return ob_get_clean();
+      }
+      return false;
+   }
+
+   private function writeToOutput($str) {
+      fwrite($this->outputStream, $str);
+   }
+
+   private function handleContent() {
+      $this->write('<p><b>Uri: </b>');
+      $this->write($this->request->uri);
+      $this->write('</p>');
+
+      $this->write('<p><b>Available modules: </b></br><ul>');
+      foreach($this->modules as $module) {
+         $this->write('<li>' . $module->getName() . '</li>');
+      }
+      $this->write('</ul></p>');
+
+      // module handlers request
+      $this->write('<p><b>Request handlers: </b></br><ul>');
+      foreach($this->requestHandlers as $module) {
+         $this->write('<li>' . $module->getName() . '</li>');
+      }
+      $this->write('</ul></p>');
+      foreach($this->requestHandlers as $module) {
+         $module->handleRequest();
+      }
+   }
+
+   private function handleStaticResources() {
+      // Include static resources
+      foreach($this->staticResources as $moduleResource) {
+         foreach($moduleResource[1] as $resource) {
+            $this->write('<link rel="stylesheet" type="text/css" href="static/' . $moduleResource[0] . '/' . $resource . '">');
+         }
+      }
    }
 
    private function loadModules() {
@@ -95,14 +157,20 @@ class Core implements iCore {
          }
       }
 
+      // these three lines should be in the constructor
       $this->modules = array();
+      $this->shortCodeHandlers = array();
+      $this->shortCodeHandlers[] = $this;
 
       foreach (get_declared_classes() as $className) {
          if (in_array('iModule', class_implements($className))) {
-            $this->modules[] = new $className($this, $this->request);
+            $module = new $className($this, $this->request);
+            $this->modules[] = $module;
+
+            if ($module instanceof iShortCodeHandler) {
+               $this->shortCodeHandlers[] = $module;
+            }
          }
       }
    }
 }
-
-?>

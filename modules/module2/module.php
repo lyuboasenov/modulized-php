@@ -25,7 +25,7 @@ class Module2 implements iModule {
    }
 
    public function handleRequest() {
-      $this->core->writeResponse('<div class="module2_background">Module 2 handled</div>');
+      $this->core->write('<div class="module2_background">Module 2 handled</div>');
    }
 }
 ?>

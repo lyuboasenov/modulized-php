@@ -6,4 +6,3 @@ interface iModule {
    public function getStaticResources();
    public function handleRequest();
 }
-?>
