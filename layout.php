@@ -1,6 +1,6 @@
 <html>
    <head>
-      $<core:staticResources>
+      $<host:staticResources>
    </head>
    <body>
       <div class="menu">
@@ -12,7 +12,7 @@
          $<module1:short param1=[parameter 1 value] param2=[2]>
       </div>
       <div class="content">
-         $<core:content>
+         $<host:content>
       </div>
    </body>
 </html>

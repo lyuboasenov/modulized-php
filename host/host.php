@@ -4,7 +4,7 @@ require_once ('iShortCodeHandler.php');
 require_once ('request.php');
 require_once ('shortCode.php');
 
-interface iCore {
+interface iHost {
    public function write($str);
    public function get_username();
    public function get_userid();
@@ -12,7 +12,7 @@ interface iCore {
 }
 
 
-class Core implements iCore, iShortCodeHandler {
+class Host implements iHost, iShortCodeHandler {
    private $request;
    private $modules;
    private $shortCodeHandlers;
@@ -78,15 +78,15 @@ class Core implements iCore, iShortCodeHandler {
    }
 
    public function canHandleShortCode($shortCode) {
-      return $shortCode->getId() == 'core:staticResources' ||
-         $shortCode->getId() == 'core:content';
+      return $shortCode->getId() == 'host:staticResources' ||
+         $shortCode->getId() == 'host:content';
    }
 
    public function handleShortCode($shortCode) {
       if ($this->canHandleShortCode($shortCode)) {
-         if ($shortCode->getId() == 'core:staticResources') {
+         if ($shortCode->getId() == 'host:staticResources') {
             $this->handleStaticResources();
-         } else if ($shortCode->getId() == 'core:content') {
+         } else if ($shortCode->getId() == 'host:content') {
             $this->handleContent();
          }
       } else {

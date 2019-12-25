@@ -1,4 +1,4 @@
 <?php
-   require_once ('./core/core.php');
-   $core = new Core();
+   require_once ('./host/host.php');
+   $core = new Host();
    $core->handleRequest('./layout.php');
