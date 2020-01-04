@@ -7,6 +7,11 @@ class DbSet extends Set {
    private $dbType;
 
    public function __construct($db, $domainType, $dbType) {
+
+      if (!($dbType instanceof $domainType)) {
+         throw new ErrorException('DbType "' . $dbType . '" does not inherit from "' . $domainType . '".');
+      }
+
       parent::__construct($domainType);
 
       $this->db = $db;
@@ -23,7 +28,10 @@ class DbSet extends Set {
          $command = $dbObj->getUpdateCommandBuilder()->build($this->db);
       }
 
-      return command.executeScalar();
+      $result = command.executeScalar();
+      if ($result != 1) {
+         throw new ErrorException('Invalid row count on insert/update "' . $result . '".');
+      }
    }
 
    protected function findByIdInternal($id) {
