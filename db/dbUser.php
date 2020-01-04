@@ -7,16 +7,42 @@ class DbUser extends User implements IDbModel {
 
    private $dbModel;
 
-   public function __construct($data) {
-      $this->initialize();
+   private function __construct() {
+   }
 
-      if (!is_null($data)) {
-         foreach($data as $name => $value) {
-            $this->setField($name, $value, false, false);
+   public static function getPrototype(){
+      $dbUser = new DbUser();
+      $dbUser->initialize();
+
+      $dbUser->dbModel = new DbModel('users', $dbUser->metadata, $dbUser->values);
+
+      return $dbUser;
+   }
+
+   public static function fromRawData($data) {
+      $result = array();
+      foreach($data as $entry) {
+         $prototype = DbUser::getPrototype();
+
+         foreach($entry as $name => $value) {
+            $prototype->setField($name, $value, false, false);
          }
+         $result[] = $prototype;
       }
 
-      $this->dbModel = new DbModel('users', $this->metadata, $this->values);
+      return $result;
+   }
+
+   public static function fromDomainModel(User $user) {
+      $dbUser = new DbUser();
+      $dbUser->initialize();
+
+      $dbUser->metadata = $user->metadata;
+      $dbUser->values = $user->values;
+
+      $dbUser->dbModel = new DbModel('users', $dbUser->metadata, $dbUser->values);
+
+      return $dbUser;
    }
 
    public function getSelectCommandBuilder() {

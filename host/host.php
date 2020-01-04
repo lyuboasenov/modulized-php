@@ -4,7 +4,8 @@ require_once ('iShortCodeHandler.php');
 require_once ('request.php');
 require_once ('shortCode.php');
 
-require_once (__DIR__.'\..\db\repository.php');
+require_once (__DIR__.'\..\db\dbRepository.php');
+require_once (__DIR__.'\..\db\Connection.php');
 
 interface iHost {
    public function write($str);
@@ -144,7 +145,10 @@ class Host implements iHost, iShortCodeHandler {
    }
 
    private function handleUser() {
-      $repository = new Repository(null);
+      $connection = new Connection('connection-string');
+      $connection->open();
+
+      $repository = new DbRepository($connection);
       $users = $repository->getUsers()->findById(12);
 
       foreach($users as $user) {

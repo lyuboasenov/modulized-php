@@ -40,6 +40,6 @@ class SelectBuilder {
          $commandText .= ' WHERE ' . $this->where;
       }
 
-      return new SqlCommand($connection, $commandText);
+      return new Command($connection, $commandText);
    }
 }

@@ -1,6 +1,6 @@
 <?php
 
-class SqlCommand {
+class Command {
    private $command;
    private $connection;
 
@@ -18,6 +18,6 @@ class SqlCommand {
    }
 
    public function executeQuery() {
-
+      return array(array('id' => 12, 'username' => 'ogi', 'age' => 1, 'role' => 1000));
    }
 }
