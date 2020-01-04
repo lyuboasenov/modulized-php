@@ -3,11 +3,11 @@
 require_once('model.php');
 
 abstract class Set {
-   private $type;
+   protected $domainModelType;
    private $trackedObjects;
 
-   public function __construct($type) {
-      $this->type = $type;
+   public function __construct($domainModelType) {
+      $this->domainModelType = $domainModelType;
       $this->trackedObjects = array();
    }
 
@@ -16,10 +16,10 @@ abstract class Set {
          throw new ErrorException('The set does not track nulls.');
       }
 
-      if ($obj instanceof $this->type) {
+      if ($obj instanceof $this->domainModelType) {
          $this->trackedObjects[] = $obj;
       } else {
-         throw new ErrorException('Passed object "' . $obj . '" is of type "' . gettype($obj) . '". Expected type "' . $this->type . '".');
+         throw new ErrorException('Passed object "' . $obj . '" is of type "' . gettype($obj) . '". Expected type "' . $this->domainModelType . '".');
       }
    }
 

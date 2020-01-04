@@ -1,31 +1,25 @@
 <?php
 
 require_once(__DIR__ . '\..\domain\set.php');
+require_once('mapper.php');
 
 class DbSet extends Set {
    private $db;
-   private $dbType;
 
-   public function __construct($db, $domainType, $dbType) {
-
-      if (!($dbType instanceof $domainType)) {
-         throw new ErrorException('DbType "' . $dbType . '" does not inherit from "' . $domainType . '".');
-      }
-
+   public function __construct($db, $domainType) {
       parent::__construct($domainType);
 
       $this->db = $db;
-      $this->dbType = $dbType;
    }
 
-   protected function saveObjectInternal(Model $obj) {
-      $dbObj = $obj instanceof $this->dbType ? $obj : $this->dbType::fromDomainModel($obj);
+   protected function saveObjectInternal(Model $model) {
+      $mapper = Mapper::fromDomainModel($model);
 
       $command = null;
-      if (is_null($dbObj->id)){
-         $command = $dbObj->getInsertCommandBuilder()->build($this->db);
+      if (is_null($model->id)){
+         $command = $mapper->getInsertCommandBuilder()->build($this->db);
       } else {
-         $command = $dbObj->getUpdateCommandBuilder()->build($this->db);
+         $command = $mapper->getUpdateCommandBuilder()->build($this->db);
       }
 
       $result = command.executeScalar();
@@ -39,11 +33,17 @@ class DbSet extends Set {
    }
 
    protected function findInternal($criteria) {
-      $prototype = $this->dbType::getPrototype();
-      $command = $prototype->getSelectCommandBuilder()
+      $mapper = Mapper::fromDomainType($this->domainModelType);
+      $command = $mapper->getSelectCommandBuilder()
          ->where($criteria)
          ->build($db);
 
-      return $this->dbType::fromRawData($command->executeQuery());
+      $data = $command->executeQuery();
+      $result = array();
+      foreach($data as $entry) {
+         $result[] = new $this->domainModelType($entry);
+      }
+
+      return $result;
    }
 }

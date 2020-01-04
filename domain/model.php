@@ -25,6 +25,11 @@ abstract class Model {
       return $this->isDirty;
    }
 
+   public function getMetadata() {
+      $this->initialize();
+      return $this->metadata;
+   }
+
    protected function setField($name, $value, $riseIsDirty, $riseIdSetError) {
       $this->initialize();
 

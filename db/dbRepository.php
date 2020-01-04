@@ -2,7 +2,6 @@
 
 require_once(__DIR__ . '\..\domain\iRepository.php');
 require_once('dbSet.php');
-require_once('dbUser.php');
 
 class DbRepository implements IRepository {
    private $userSet;
@@ -14,7 +13,7 @@ class DbRepository implements IRepository {
 
    public function getUsers() {
       if (is_null($this->userSet)) {
-         $this->userSet = new DbSet($this->db, 'User', 'DbUser');
+         $this->userSet = new DbSet($this->db, 'User');
       }
 
       return $this->userSet;
