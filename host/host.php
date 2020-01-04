@@ -4,6 +4,8 @@ require_once ('iShortCodeHandler.php');
 require_once ('request.php');
 require_once ('shortCode.php');
 
+require_once (__DIR__.'\..\db\repository.php');
+
 interface iHost {
    public function write($str);
    public function get_username();
@@ -39,6 +41,7 @@ class Host implements iHost, iShortCodeHandler {
       }
 
       $this->outputStream = fopen("php://output", 'w');
+      stream_set_blocking($this->outputStream, true);
       try {
          // Core handle
          $this->write($this->getIncludeContents($layout));
@@ -79,13 +82,16 @@ class Host implements iHost, iShortCodeHandler {
 
    public function canHandleShortCode($shortCode) {
       return $shortCode->getId() == 'host:staticResources' ||
-         $shortCode->getId() == 'host:content';
+         $shortCode->getId() == 'host:content' ||
+         $shortCode->getId() == 'host:user';
    }
 
    public function handleShortCode($shortCode) {
       if ($this->canHandleShortCode($shortCode)) {
          if ($shortCode->getId() == 'host:staticResources') {
             $this->handleStaticResources();
+         } else if ($shortCode->getId() == 'host:user') {
+            $this->handleUser();
          } else if ($shortCode->getId() == 'host:content') {
             $this->handleContent();
          }
@@ -134,6 +140,20 @@ class Host implements iHost, iShortCodeHandler {
       $this->write('</ul></p>');
       foreach($this->requestHandlers as $module) {
          $module->handleRequest();
+      }
+   }
+
+   private function handleUser() {
+      $repository = new Repository(null);
+      $users = $repository->getUsers()->findById(12);
+
+      foreach($users as $user) {
+         $this->write('<div>');
+         $this->write('<p><b>id:</b>' . $user->id . '</p>');
+         $this->write('<p><b>username:</b>' . $user->username . '</p>');
+         $this->write('<p><b>age:</b>' . $user->age . '</p>');
+         $this->write('<p><b>role:</b>' . $user->role . '</p>');
+         $this->write('</div>');
       }
    }
 

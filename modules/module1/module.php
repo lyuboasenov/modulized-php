@@ -25,6 +25,9 @@ class Module1 implements iModule, iShortCodeHandler {
    }
 
    public function handleRequest() {
+
+      echo 'this should not be printed';
+
       $this->core->write('<div class="module1_background">Module 1 handled</div>');
    }
 
