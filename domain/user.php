@@ -5,12 +5,15 @@ require_once('field.php');
 
 class User extends Model {
 
-   public function __construct($data) {
-      if (!is_null($data)) {
-         foreach($data as $name => $value) {
-            $this->setField($name, $value, false, false);
-         }
+   public static function fromRawData($data) {
+      $user = new User();
+      $user->initialize();
+
+      foreach($data as $name => $value) {
+         $user->setField($name, $value, false, false);
       }
+
+      return $user;
    }
 
    protected function getFields() {

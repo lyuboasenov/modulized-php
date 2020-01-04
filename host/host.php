@@ -159,6 +159,17 @@ class Host implements iHost, iShortCodeHandler {
          $this->write('<p><b>role:</b>' . $user->role . '</p>');
          $this->write('</div>');
       }
+
+      $newUser = new User();
+      $newUser->username = 'pesho';
+      $newUser->password = 'pesho1';
+      $newUser->role = 99;
+      $repository->getUsers()->add($newUser);
+
+      $updateUser = $users[0];
+      $updateUser->age = 2;
+
+      $repository->save();
    }
 
    private function handleStaticResources() {

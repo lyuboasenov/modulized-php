@@ -2,6 +2,9 @@
 
 require_once(__DIR__ . '/../domain/user.php');
 require_once(__DIR__ . '/commands/selectBuilder.php');
+require_once(__DIR__ . '/commands/insertBuilder.php');
+require_once(__DIR__ . '/commands/updateBuilder.php');
+require_once(__DIR__ . '/commands/deleteBuilder.php');
 
 class Mapper {
    private $table;
@@ -13,17 +16,7 @@ class Mapper {
    }
 
    public static function fromDomainType($modelType) {
-      return new Mapper($modelType, new $modelType(null));
-   }
-
-   public static function fromRawData($modelType, $data) {
-      $result = array();
-
-      foreach($data as $entry) {
-         $result[] = new $modelType($entry);
-      }
-
-      return $result;
+      return new Mapper($modelType, new $modelType);
    }
 
    public static function fromDomainModel(Model $model) {
@@ -36,14 +29,26 @@ class Mapper {
    }
 
    public function getInsertCommandBuilder() {
+      $builder = InsertBuilder::into($this->table);
+      foreach(array_keys($this->model->getMetadata()) as $field) {
+         if ($field != 'id') {
+            $builder->value($field, $this->model->$field);
+         }
+      }
 
+      return $builder;
    }
 
    public function getUpdateCommandBuilder() {
+      $builder = UpdateBuilder::table($this->table);
+      foreach(array_keys($this->model->getMetadata()) as $field) {
+         $builder->set($field, $this->model->$field);
+      }
 
+      return $builder->where('id=' . $this->model->id);
    }
 
    public function getDeleteCommandBuilder() {
-
+      return DeleteBuilder::from($this->table)->where('id=' . $this->model->id);
    }
 }

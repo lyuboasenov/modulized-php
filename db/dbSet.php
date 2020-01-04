@@ -22,7 +22,7 @@ class DbSet extends Set {
          $command = $mapper->getUpdateCommandBuilder()->build($this->db);
       }
 
-      $result = command.executeScalar();
+      $result = $command->executeScalar();
       if ($result != 1) {
          throw new ErrorException('Invalid row count on insert/update "' . $result . '".');
       }
@@ -41,7 +41,7 @@ class DbSet extends Set {
       $data = $command->executeQuery();
       $result = array();
       foreach($data as $entry) {
-         $result[] = new $this->domainModelType($entry);
+         $result[] = $this->domainModelType::fromRawData($entry);
       }
 
       return $result;
