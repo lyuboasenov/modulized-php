@@ -110,3 +110,15 @@ class CharField extends Field {
       return is_string($value) && strlen($value) <= $this->maxLength;
    }
 }
+
+class ForeignKeyField extends Field {
+   public function isValid($value) {
+      return true;
+   }
+}
+
+class ManyToManyForeignKeyField extends Field {
+   public function isValid($value) {
+      return true;
+   }
+}
