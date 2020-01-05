@@ -23,6 +23,7 @@ class User extends Model {
          new CharField('password', false, null, 35),
          new IntegerField('age', true, 0),
          new IntegerField('role', false, null),
+         new OneToManyForeignKeyField('emails', false, null, 'Email', 'user_id'),
       ];
    }
 }

@@ -111,14 +111,37 @@ class CharField extends Field {
    }
 }
 
-class ForeignKeyField extends Field {
-   public function isValid($value) {
-      return true;
+abstract class ForeignKeyField extends Field {
+   public function __construct($name, $null, $default) {
+      parent::__construct($name, $null, $default);
    }
 }
 
-class ManyToManyForeignKeyField extends Field {
+class OneToManyForeignKeyField extends ForeignKeyField {
+   private $referenceType;
+   private $referenceField;
+
+   public function __construct($name, $null, $default, $referenceType, $referenceField) {
+      parent::__construct($name, $null, $default);
+      $this->referenceType = $referenceType;
+      $this->referenceField = $referenceField;
+   }
+
    public function isValid($value) {
-      return true;
+      return false;
+   }
+
+   public function getReferenceType() {
+      return $this->referenceType;
+   }
+
+   public function getReferenceField() {
+      return $this->referenceField;
+   }
+}
+
+class ManyToManyForeignKeyField extends ForeignKeyField {
+   public function isValid($value) {
+      return false;
    }
 }

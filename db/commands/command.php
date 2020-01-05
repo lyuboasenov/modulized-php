@@ -20,7 +20,15 @@ class Command {
 
    public function executeQuery() {
       $this->log();
-      return array(array('id' => 12, 'username' => 'ogi', 'age' => 1, 'role' => 1000));
+
+      if (strpos($this->command, 'FROM User') !== false) {
+         return array(array('id' => 12, 'username' => 'ogi', 'age' => 1, 'role' => 1000));
+      } else if (strpos($this->command, 'FROM Email') !== false) {
+         return array(
+            array('id' => 12, 'email' => 'ogi@asenov.com'),
+            array('id' => 13, 'email' => 'ogi@gmail.com'),
+         );
+      }
    }
 
    private function log(){

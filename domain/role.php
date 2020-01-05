@@ -3,22 +3,23 @@
 require_once('model.php');
 require_once('field.php');
 
-class Email extends MOdel {
+class Role extends Model {
    public static function fromRawData($data) {
-      $email = new Email();
-      $email->initialize();
+      $role = new Role();
+      $role->initialize();
 
       foreach($data as $name => $value) {
-         $email->setField($name, $value, false, false);
+         $role->setField($name, $value, false, false);
       }
 
-      return $email;
+      return $role;
    }
 
    protected function getFields() {
       return [
          new IntegerField('id', false, null),
-         new CharField('email', false, null, 15)
+         new CharField('name', false, null, 15),
+         new IntegerField('value', true, 0),
       ];
    }
 }

@@ -3,12 +3,17 @@
 require_once('model.php');
 
 abstract class Set {
+   protected $repository;
    protected $domainModelType;
    private $trackedObjects;
+   private $removedObjects;
 
-   public function __construct($domainModelType) {
+
+   public function __construct($repository, $domainModelType) {
+      $this->repository = $repository;
       $this->domainModelType = $domainModelType;
       $this->trackedObjects = array();
+      $this->removedObjects = array();
    }
 
    public function add(Model $obj) {
@@ -17,7 +22,10 @@ abstract class Set {
       }
 
       if ($obj instanceof $this->domainModelType) {
-         $this->trackedObjects[] = $obj;
+         if (array_search($obj, $this->trackedObjects) === false){
+            $this->trackedObjects[] = $obj;
+            $obj->setRepository($this->repository);
+         }
       } else {
          throw new ErrorException('Passed object "' . $obj . '" is of type "' . gettype($obj) . '". Expected type "' . $this->domainModelType . '".');
       }
@@ -26,6 +34,7 @@ abstract class Set {
    public function remove(Model $obj) {
       if (!array_search($obj, $this->trackedObjects)) {
          unset($this->trackedObjects[$obj]);
+         $this->removedObjects[] = $obj;
       } else {
          throw new ErrorException('Object "' . $obj . '" not tracked.');
       }
@@ -57,8 +66,13 @@ abstract class Set {
             $this->saveObjectInternal($obj);
          }
       }
+
+      foreach($this->removedObjects as $obj) {
+         $this->removeObjectInternal($obj);
+      }
    }
 
+   protected abstract function removeObjectInternal(Model $obj);
    protected abstract function saveObjectInternal(Model $obj);
    protected abstract function findByIdInternal($id);
    protected abstract function findInternal($criteria);

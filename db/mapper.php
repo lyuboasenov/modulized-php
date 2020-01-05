@@ -1,6 +1,8 @@
 <?php
 
 require_once(__DIR__ . '/../domain/user.php');
+require_once(__DIR__ . '/../domain/email.php');
+require_once(__DIR__ . '/../domain/field.php');
 require_once(__DIR__ . '/commands/selectBuilder.php');
 require_once(__DIR__ . '/commands/insertBuilder.php');
 require_once(__DIR__ . '/commands/updateBuilder.php');
@@ -24,15 +26,21 @@ class Mapper {
    }
 
    public function getSelectCommandBuilder() {
-      return SelectBuilder::from($this->table)
-         ->fields(array_keys($this->model->getMetadata()));
+      $builder =  SelectBuilder::from($this->table);
+      foreach($this->model->getMetadata() as $name => $field) {
+         if (!($field instanceof ForeignKeyField)) {
+            $builder->field($name);
+         }
+      }
+
+      return $builder;
    }
 
    public function getInsertCommandBuilder() {
       $builder = InsertBuilder::into($this->table);
-      foreach(array_keys($this->model->getMetadata()) as $field) {
-         if ($field != 'id') {
-            $builder->value($field, $this->model->$field);
+      foreach($this->model->getMetadata() as $name => $field) {
+         if ($name != 'id' && !($field instanceof ForeignKeyField)) {
+            $builder->value($name, $this->model->$name);
          }
       }
 
@@ -41,8 +49,10 @@ class Mapper {
 
    public function getUpdateCommandBuilder() {
       $builder = UpdateBuilder::table($this->table);
-      foreach(array_keys($this->model->getMetadata()) as $field) {
-         $builder->set($field, $this->model->$field);
+      foreach($this->model->getMetadata() as $name => $field) {
+         if ($name != 'id' && !($field instanceof ForeignKeyField)) {
+            $builder->set($name, $this->model->$name);
+         }
       }
 
       return $builder->where('id=' . $this->model->id);

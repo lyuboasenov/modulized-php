@@ -157,6 +157,15 @@ class Host implements iHost, iShortCodeHandler {
          $this->write('<p><b>username:</b>' . $user->username . '</p>');
          $this->write('<p><b>age:</b>' . $user->age . '</p>');
          $this->write('<p><b>role:</b>' . $user->role . '</p>');
+
+         foreach($user->emails as $email) {
+            $this->write('<p><b>email:</b>' . $email->email . '</p>');
+         }
+
+         foreach($user->emails as $email) {
+            $this->write('<p><b>email:</b>' . $email->email . '</p>');
+         }
+
          $this->write('</div>');
       }
 
