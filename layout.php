@@ -3,9 +3,6 @@
       $<host:staticResources>
    </head>
    <body>
-      <div class="user">
-         $<host:user>
-      </div>
       <div class="menu">
          <ul>
             <li>menu item 1</li>

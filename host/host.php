@@ -4,9 +4,6 @@ require_once ('iShortCodeHandler.php');
 require_once ('request.php');
 require_once ('shortCode.php');
 
-require_once (__DIR__.'\..\db\dbRepository.php');
-require_once (__DIR__.'\..\db\Connection.php');
-
 interface iHost {
    public function write($str);
    public function get_username();
@@ -83,16 +80,13 @@ class Host implements iHost, iShortCodeHandler {
 
    public function canHandleShortCode($shortCode) {
       return $shortCode->getId() == 'host:staticResources' ||
-         $shortCode->getId() == 'host:content' ||
-         $shortCode->getId() == 'host:user';
+         $shortCode->getId() == 'host:content';
    }
 
    public function handleShortCode($shortCode) {
       if ($this->canHandleShortCode($shortCode)) {
          if ($shortCode->getId() == 'host:staticResources') {
             $this->handleStaticResources();
-         } else if ($shortCode->getId() == 'host:user') {
-            $this->handleUser();
          } else if ($shortCode->getId() == 'host:content') {
             $this->handleContent();
          }
@@ -142,43 +136,6 @@ class Host implements iHost, iShortCodeHandler {
       foreach($this->requestHandlers as $module) {
          $module->handleRequest();
       }
-   }
-
-   private function handleUser() {
-      $connection = new Connection('connection-string');
-      $connection->open();
-
-      $repository = new DbRepository($connection);
-      $users = $repository->getUsers()->findById(12);
-
-      foreach($users as $user) {
-         $this->write('<div>');
-         $this->write('<p><b>id:</b>' . $user->id . '</p>');
-         $this->write('<p><b>username:</b>' . $user->username . '</p>');
-         $this->write('<p><b>age:</b>' . $user->age . '</p>');
-         $this->write('<p><b>role:</b>' . $user->role . '</p>');
-
-         foreach($user->emails as $email) {
-            $this->write('<p><b>email:</b>' . $email->email . '</p>');
-         }
-
-         foreach($user->emails as $email) {
-            $this->write('<p><b>email:</b>' . $email->email . '</p>');
-         }
-
-         $this->write('</div>');
-      }
-
-      $newUser = new User();
-      $newUser->username = 'pesho';
-      $newUser->password = 'pesho1';
-      $newUser->role = 99;
-      $repository->getUsers()->add($newUser);
-
-      $updateUser = $users[0];
-      $updateUser->age = 2;
-
-      $repository->save();
    }
 
    private function handleStaticResources() {
